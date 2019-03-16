@@ -77,7 +77,7 @@ func handler() func(http.ResponseWriter, *http.Request) {
 
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Print("upgrade:", err)
+			log.Print("upgrade error:", err)
 			return
 		}
 
@@ -93,12 +93,14 @@ func handler() func(http.ResponseWriter, *http.Request) {
 
 // Serve メソッド名の通り
 func Serve() {
-	go func() {
-		for {
-			time.Sleep(time.Second * 60)
-			log.Printf("connecting: %d", connectCounter)
-		}
-	}()
+	if config.Debug {
+		go func() {
+			for {
+				time.Sleep(time.Second * 60)
+				log.Printf("connecting: %d", connectCounter)
+			}
+		}()
+	}
 
 	rtr := mux.NewRouter()
 	rtr.HandleFunc("/", handler())

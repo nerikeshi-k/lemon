@@ -5,7 +5,9 @@ package client
 import (
 	"encoding/json"
 	"errors"
+	"log"
 
+	"github.com/nerikeshi-k/lemon/config"
 	"github.com/nerikeshi-k/lemon/ws/client/tradelock"
 	"github.com/nerikeshi-k/lemon/ws/query"
 )
@@ -54,6 +56,9 @@ func (room *Room) TradeSdpOperation(clientID int, partnerID int) error {
 		return err
 	}
 	defer tradelock.Unlock(clientID, partnerID)
+	if config.Debug {
+		log.Printf("start: trade between %d and %d\n", clientID, partnerID)
+	}
 
 	if partnerID == clientID {
 		return errors.New("same person")
@@ -69,12 +74,18 @@ func (room *Room) TradeSdpOperation(clientID int, partnerID int) error {
 		return errors.New("partner does not exist")
 	}
 
+	if config.Debug {
+		log.Printf("wait for client sdp: trade between %d and %d\n", clientID, partnerID)
+	}
 	// clientにlocalSdpを作ってもらい送ってもらう
 	clientReply, err := client.RequestSdpAction(partner.id)
 	if err != nil {
 		return err
 	}
 
+	if config.Debug {
+		log.Printf("wait for partner answer sdp: trade between %d and %d\n", clientID, partnerID)
+	}
 	// partnerにそのlocalSdpに対するanswerSdpを返してもらう
 	clientLocalSdpPack := query.SdpPack{}
 	err = json.Unmarshal([]byte(clientReply.Data), &clientLocalSdpPack)
@@ -86,6 +97,9 @@ func (room *Room) TradeSdpOperation(clientID int, partnerID int) error {
 		return err
 	}
 
+	if config.Debug {
+		log.Printf("send client answer sdp: trade between %d and %d\n", clientID, partnerID)
+	}
 	// partnerからもらったanswerSdpをclientに返す
 	partnerAnswerSdpPack := query.SdpToPartnerPack{}
 	err = json.Unmarshal([]byte(partnerReply.Data), &partnerAnswerSdpPack)
@@ -94,5 +108,8 @@ func (room *Room) TradeSdpOperation(clientID int, partnerID int) error {
 	}
 	client.SetAnswerSdpAction(partner.id, partnerAnswerSdpPack.EncodedSDP)
 
+	if config.Debug {
+		log.Printf("finished: trade between %d and %d\n", clientID, partnerID)
+	}
 	return nil
 }

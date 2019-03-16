@@ -10,6 +10,7 @@ var (
 	WebhookPort      int
 	AppServerAddress string
 	BoundAddress     string
+	Debug            bool
 )
 
 func init() {
@@ -17,6 +18,7 @@ func init() {
 	flag.IntVar(&WebhookPort, "webhook-port", 5580, "port for webpush (default: 5580)")
 	flag.StringVar(&AppServerAddress, "app", "", "app server address")
 	flag.StringVar(&BoundAddress, "bind", "localhost", "bound addresss (default: localhost)")
+	flag.BoolVar(&Debug, "debug", false, "debug?")
 	flag.Parse()
 	rep := regexp.MustCompile(`(/)$`)
 	AppServerAddress = rep.ReplaceAllString(AppServerAddress, "")
